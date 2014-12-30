@@ -1,0 +1,51 @@
+Bill of Materials for Lucid RevA
+
+**All resistors are 0603 (sorry no links)**
+
+Updates: 1. 12/30/2014 
+
+Changes:  R13 to 150 from 3.3k (1)
+          R9 to 470 from 2.4k (1)
+          
+#Cmp ( order = Reference )
+| BT1        BATTERY     
+| BT2        BATTERY     
+| C1         22pF  http://www.digikey.com/product-detail/en/C1608C0G1H220J080AA/445-1273-1-ND/567670      
+| C2         22pF        
+| C3         .22uF  http://www.digikey.com/product-detail/en/C1608X7R1C224K080AC/445-1318-1-ND/567690     
+| C4         .22uF       
+| C5         .22uF       
+| C6         .22uF       
+| C7         10uF     http://www.digikey.com/product-detail/en/GRM21BR61C106KE15L/490-3886-1-ND/965928   
+| C8         10uF        
+| C9         10uF        
+| C10        10uF        
+| D1         DIODE       http://www.digikey.com/product-detail/en/CDSU101A/641-1002-1-ND/1121124
+| D2         DIODE       
+| D3         LED         http://www.digikey.com/product-detail/en/LTST-C171GKT/160-1423-1-ND/386792
+| IC1        ATMEGA328P-A	http://www.digikey.com/product-detail/en/ATMEGA328P-AUR/ATMEGA328P-AURCT-ND/3789455
+| P1         ICSP        
+| P2         ELECTODES   
+| R1         10k         
+| R2         10k         
+| R3         2.2k        
+| R4         2.2k        
+| R5         13k         
+| R6         13k         
+| R7         10k         
+| R8         10M         
+| R9         470       
+| R10        10k         
+| R11        10k         
+| R12        10k         
+| R13        150        
+| RV1        20k         
+| U1         LM358       http://www.digikey.com/product-detail/en/LM358DR/296-1014-1-ND/404838
+| U2         LM358       
+| U3         MCP41010    http://www.digikey.com/product-detail/en/MCP41010-I%2FSN/MCP41010-I%2FSN-ND/362079
+| U4         LM1117      http://www.digikey.com/product-detail/en/LM1117MPX-5.0%2FNOPB/LM1117MPX-5.0%2FNOPBTR-ND/366734
+| U5         ICL7660     http://www.digikey.com/product-detail/en/ICL7660CSA%2B/ICL7660CSA%2B-ND/947725
+| U6         PCF8563     http://www.digikey.com/product-detail/en/PCF8563T%2FF4,118/568-1068-1-ND/735787
+| X1         16MHz       
+| X2         32.768kHz   
+#End Cmp
