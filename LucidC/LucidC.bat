@@ -41,4 +41,5 @@ cls
 avrdude -p atmega328p -c usbtiny -P -e -U flash:w:Lucid.hex
 
 echo Done!
+echo this is a test of github hahahahahahahah
 pause
