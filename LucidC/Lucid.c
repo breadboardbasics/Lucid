@@ -29,11 +29,11 @@ volatile int seconds,mins,hours;
 volatile int flag = 0;
 volatile int clr;
 
-int hour = //varHour
-int min = //varMin
-int current = //varCurrent
-int pdurr = //varPdurr
-int npdurr = //varNpdurr
+int hour = 4;//varHour
+int min = 4;//varMin
+int current = 4;//varCurrent
+int pdurr = 4;//varPdurr
+int npdurr = 4;//varNpdurr
 
 int main(){
   enableClocks();
