@@ -13,7 +13,7 @@ set current=%current%;//varCurrent
 set pdurr=%pdurr%;//varPdurr
 set npdurr=%npdurr%;//varNpdurr
 
-cd C:\Users\Tyler\Documents\LucidC
+cd C:\Users\Tyler\Documents\Lucid\LucidC
 
 fart.exe -- Lucid.c //varHour %hour%
 fart.exe -- Lucid.c //varMin %min%
@@ -41,5 +41,4 @@ cls
 avrdude -p atmega328p -c usbtiny -P -e -U flash:w:Lucid.hex
 
 echo Done!
-echo this is a test of github hahahahahahahah
 pause
