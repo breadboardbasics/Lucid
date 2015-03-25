@@ -50,6 +50,8 @@ int main(){
   set_output(DDRB,1); //Set led pin as output
   set_input(DDRD,2); //Set D2 as an input (for interrupt)
   
+  int i,t;
+  
   const char time[] = __TIME__; //Get current time from PC when compiling
   int myhour = 10*(time[0] - '0') + (time[1] - '0');
   int mymin = 10*(time[3] - '0') + (time[4] - '0');
@@ -67,15 +69,15 @@ int main(){
   blink();//Blink once to indicate start of test pulse
   
   output_high(PORTB,0);//Turn oscillator on
-  int i = 255;
+  i = 255;
   while(i >= steps){ //Ramp Up
 	  _delay_ms(20);
 	  potWrite(i);
 	  i--;
   }
-  
-  _delay_ms(5000);//Sustain current for 5s
-  
+    
+  _delay_ms(5000); //Sustain for 5s
+	
   while(i >= 255){//Ramp Down
 	  _delay_ms(20);
 	  potWrite(i);
@@ -96,6 +98,7 @@ int main(){
       sleep_disable();
 	}
 	if(flag){
+	  cli();//Disable interrupts
 	  clearAlarm();
 	  output_high(PORTB,0);//Turn oscillator on
 	  output_high(PORTB,1);//Turn led on
@@ -107,16 +110,20 @@ int main(){
 	    i--;
 	  }
 	  
-	  _delay_ms(60000*pdurr);//Sustain for specified time in minutes 
+	 t = 0;
+     while(t <= (60*pdurr)){
+	  _delay_ms(1000);
+	  t++;
+     }
 	  
 	  while(i >= 255){//Ramp Down
 	    _delay_ms(20);
 	    potWrite(i);
 	    i++;
       }
-	  
 	  writeTime(0,0,1);//Reset Time
 	  setAlarm(npdurr,99);//Set alarm for given minutes later we dont care about hours
+	  sei();//Enable interrupts
 	  output_low(PORTB,0);//Turn oscillator off
 	  output_low(PORTB,1);//Turn led off
 	  //Loop and go back to sleep
@@ -196,6 +203,10 @@ void setAlarm(int mins, int hours){
   if(hours != 99){
     twiTX(AlarmEnable & decToBcd(hours));
   }
+  else{
+	twiTX(0x80); //Disable hour alarm
+  }
+	
   txStop();
   txStart();
   twiTX(0xA2);// Send device write address
@@ -205,13 +216,11 @@ void setAlarm(int mins, int hours){
   }
   
 void clearAlarm(){
-  cli();//Disable interrupts
   twiTX(0xA2);// Send device write address
   twiTX(0x01);// Send address of Control Register 2
   twiTX(0x00);// Disable Alarm and clear alarm flag
   txStop();  
   flag = 0;
-  sei();//Enable interrupts
   }
   
 void twiRX(const uint8_t targetAddress, uint8_t numBytes){
