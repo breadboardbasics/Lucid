@@ -25,10 +25,9 @@ cls
 echo Compiling...
 
 avr-gcc -g -Os -mmcu=atmega328p -c Lucid.c
+if errorlevel 1 goto failed_compile
 avr-gcc -g -mmcu=atmega328p -o Lucid.elf Lucid.o
 avr-objcopy -j .text -j .data -O ihex Lucid.elf Lucid.hex
-
-pause
 
 fart.exe -- Lucid.c %new_hour%  //varHour
 fart.exe -- Lucid.c %new_min%  //varMin
@@ -39,9 +38,10 @@ fart.exe -- Lucid.c %new_npdurr%  //varNpdurr
 cls
 
 avrdude -p atmega328p -c usbtiny -P -e -U flash:w:Lucid.hex
-if errorlevel 1 goto failed
+if errorlevel 1 goto failed_upload
 
-echo Succesfull! Here are your parameters:
+cls
+echo Programming Successful! Here are your parameters:
 echo Wakeup hour = %hour%
 echo Wakeup minute = %min%
 echo Current = %current%uA
@@ -49,8 +49,13 @@ echo Pulse Durration = %pdurr% minutes
 echo Non-Pulse Durration = %npdurr% minutes 
 goto done
 
-:failed 
+:failed_compile
+echo Failed to compile, make sure that you have selected the right directory in the .bat file
+goto done
+
+:failed_upload
 echo Oops! Something is wrong please check programmer connections and try again.
+echo Also make sure that the correct programmer is selected in the .bat file (see README)
 
 :done
 pause
