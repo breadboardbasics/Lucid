@@ -7,19 +7,19 @@ set /p current=Enter tACS current (0-1500uA):
 set /p pdurr=Enter duration of each pulse in minutes:
 set /p npdurr=Enter duration of non-pulse time in minutes:
 
-set hour=%hour%;//varHour
-set min=%min%;//varMin
-set current=%current%;//varCurrent
-set pdurr=%pdurr%;//varPdurr
-set npdurr=%npdurr%;//varNpdurr
+set new_hour=%hour%;//varHour
+set new_min=%min%;//varMin
+set new_current=%current%;//varCurrent
+set new_pdurr=%pdurr%;//varPdurr
+set new_npdurr=%npdurr%;//varNpdurr
 
 cd C:\Users\Tyler\Documents\Lucid\LucidC
 
-fart.exe -- Lucid.c //varHour %hour%
-fart.exe -- Lucid.c //varMin %min%
-fart.exe -- Lucid.c //varCurrent %current%
-fart.exe -- Lucid.c //varPdurr %pdurr%
-fart.exe -- Lucid.c //varNpdurr %npdurr%
+fart.exe -- Lucid.c //varHour %new_hour%
+fart.exe -- Lucid.c //varMin %new_min%
+fart.exe -- Lucid.c //varCurrent %new_current%
+fart.exe -- Lucid.c //varPdurr %new_pdurr%
+fart.exe -- Lucid.c //varNpdurr %new_npdurr%
 
 cls
 echo Compiling...
@@ -30,15 +30,27 @@ avr-objcopy -j .text -j .data -O ihex Lucid.elf Lucid.hex
 
 pause
 
-fart.exe -- Lucid.c %hour%  //varHour
-fart.exe -- Lucid.c %min%  //varMin
-fart.exe -- Lucid.c %current%  //varCurrent
-fart.exe -- Lucid.c %pdurr%  //varPdurr
-fart.exe -- Lucid.c %npdurr%  //varNpdurr
+fart.exe -- Lucid.c %new_hour%  //varHour
+fart.exe -- Lucid.c %new_min%  //varMin
+fart.exe -- Lucid.c %new_current%  //varCurrent
+fart.exe -- Lucid.c %new_pdurr%  //varPdurr
+fart.exe -- Lucid.c %new_npdurr%  //varNpdurr
 
 cls
 
 avrdude -p atmega328p -c usbtiny -P -e -U flash:w:Lucid.hex
+if errorlevel 1 goto failed
 
-echo Done!
+echo Succesfull! Here are your parameters:
+echo Wakeup hour = %hour%
+echo Wakeup minute = %min%
+echo Current = %current%uA
+echo Pulse Durration = %pdurr% minutes
+echo Non-Pulse Durration = %npdurr% minutes 
+goto done
+
+:failed 
+echo Oops! Something is wrong please check programmer connections and try again.
+
+:done
 pause
