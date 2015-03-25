@@ -2,6 +2,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 
 #define output_low(port,pin) port &= ~(1<<pin)
 #define output_high(port,pin) port |= (1<<pin)
@@ -26,46 +27,102 @@ void txStop();
 void twintWait();
 void enableClocks();
 uint8_t decToBcd(int val);
+void blink();
 
 volatile int seconds,mins,hours;
 volatile int flag = 0;
-volatile int clr;
 
 int hour = //varHour
 int min = //varMin
 int current = //varCurrent
-int pdurr = //varPdurr
-int npdurr = //varNpdurr
+float pdurr = //varPdurr
+float npdurr = //varNpdurr
 
+ISR(INT0_vect){ //Alarm routine, after alarm set flag to 1
+	flag = 1;
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main(){
-	
   enableClocks();
+  SPI_begin();
   set_output(DDRB,0); //Set ocon as output
   set_output(DDRB,1); //Set led pin as output
   set_input(DDRD,2); //Set D2 as an input (for interrupt)
   
-  output_high(PORTB,1);//Turn led on
+  const char time[] = __TIME__; //Get current time from PC when compiling
+  int myhour = 10*(time[0] - '0') + (time[1] - '0');
+  int mymin = 10*(time[3] - '0') + (time[4] - '0');
+  int mysec = 10*(time[6] - '0') + (time[7] - '0');
+	
+  writeTime(mysec, mymin, myhour); //Write current time to RTC
+  setAlarm(min, hour);//Set alarm based on input from .bat file
+  
+  EIMSK |= (1 << INT0); //Turns on INT0
+  EICRA = 2; //Set int0 interrupt to trigger on falling edge
+  sei(); //Enable interrupts
+  
+  int steps = (-64 * current / 375) + 255; //Converts given current to steps on pot
+  
+  blink();//Blink once to indicate start of test pulse
+  
   output_high(PORTB,0);//Turn oscillator on
-  uint8_t i = 0;
-  
-  SPI_begin();
-  _delay_ms(1000);
-  output_low(PORTB,1);//turn led off
-  
-  while(1){
-  while(i<255){
-	  output_high(PORTB,1);//turn led off
+  int i = 255;
+  while(i >= steps){ //Ramp Up
+	  _delay_ms(20);
 	  potWrite(i);
-	  _delay_ms(50);
-	  i++;
-  }
-  while(i>0){
-	  output_low(PORTB,1);
-	  potWrite(i);
-	  _delay_ms(50);
 	  i--;
   }
+  
+  _delay_ms(5000);//Sustain current for 5s
+  
+  while(i >= 255){//Ramp Down
+	  _delay_ms(20);
+	  potWrite(i);
+	  i++;
   }
+  output_low(PORTB,0);//Turn oscillator off
+  
+  blink();
+  _delay_ms(100);
+  blink();
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  while(1){
+    if(!flag){
+	  sleep_enable();
+      set_sleep_mode(SLEEP_MODE_STANDBY);
+      sleep_mode();  //go to sleep
+      sleep_disable();
+	}
+	if(flag){
+	  clearAlarm();
+	  output_high(PORTB,0);//Turn oscillator on
+	  output_high(PORTB,1);//Turn led on
+	  
+	   i = 255;
+	  while(i >= steps){ //Ramp Up
+	    _delay_ms(20);
+	    potWrite(i);
+	    i--;
+	  }
+	  
+	  _delay_ms(60000*pdurr);//Sustain for specified time in minutes 
+	  
+	  while(i >= 255){//Ramp Down
+	    _delay_ms(20);
+	    potWrite(i);
+	    i++;
+      }
+	  
+	  writeTime(0,0,1);//Reset Time
+	  setAlarm(npdurr,99);//Set alarm for given minutes later we dont care about hours
+	  output_low(PORTB,0);//Turn oscillator off
+	  output_low(PORTB,1);//Turn led off
+	  //Loop and go back to sleep
+  }
+  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   return(0);
 }
 
@@ -90,7 +147,7 @@ void SPI_begin() {
 
   // When the SS pin is set as OUTPUT, it can be used as
   // a general purpose output port (it doesn't influence
-  // SPI operations).
+  // SPI operations)..........
   set_output(DDRB,2); //Set SS as output
 
   // Warning: if the SS pin ever becomes a LOW INPUT then SPI
@@ -99,12 +156,6 @@ void SPI_begin() {
   SPCR |= _BV(MSTR);
   SPCR |= _BV(SPE);
 
-  // Set direction register for SCK and MOSI pin.
-  // MISO pin automatically overrides to INPUT.
-  // By doing this AFTER enabling SPI, we avoid accidentally
-  // clocking in a single bit since the lines go directly
-  // from "input" to SPI control.  
-  // http://code.google.com/p/arduino/issues/detail?id=888
   set_output(DDRB,5); //Set SCK as output
   set_output(DDRB,3); //Set MOSI as output
 }
@@ -142,7 +193,9 @@ void setAlarm(int mins, int hours){
   twiTX(0xA2);// Send device write address
   twiTX(0x09);// Send start address of Minute_alarm
   twiTX(AlarmEnable & decToBcd(mins));
-  twiTX(AlarmEnable & decToBcd(hours));
+  if(hours != 99){
+    twiTX(AlarmEnable & decToBcd(hours));
+  }
   txStop();
   txStart();
   twiTX(0xA2);// Send device write address
@@ -152,10 +205,13 @@ void setAlarm(int mins, int hours){
   }
   
 void clearAlarm(){
+  cli();//Disable interrupts
   twiTX(0xA2);// Send device write address
   twiTX(0x01);// Send address of Control Register 2
   twiTX(0x00);// Disable Alarm and clear alarm flag
   txStop();  
+  flag = 0;
+  sei();//Enable interrupts
   }
   
 void twiRX(const uint8_t targetAddress, uint8_t numBytes){
@@ -257,4 +313,10 @@ void enableClocks()
 uint8_t decToBcd(int val)
 {
     return ( (val/10*16) + (val%10) );
+}
+
+void blink(){
+	output_high(PORTB,1);//Turn led on
+	_delay_ms(200);
+	output_low(PORTB,1);//Turn led off
 }

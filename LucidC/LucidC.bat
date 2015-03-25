@@ -3,7 +3,7 @@ TITLE Luc.id Programmer
 
 set /p hour=Enter hour to wake up on (Military Time):
 set /p min=Enter minute to wake up on:
-set /p current=Enter tACS current (0-2000uA):
+set /p current=Enter tACS current (0-1500uA):
 set /p pdurr=Enter duration of each pulse in minutes:
 set /p npdurr=Enter duration of non-pulse time in minutes:
 
